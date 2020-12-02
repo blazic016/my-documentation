@@ -1,0 +1,398 @@
+
+\documentclass[12pt]{report}
+\usepackage[a4paper]{geometry}
+\usepackage[myheadings]{fullpage}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{graphicx, wrapfig, subcaption, setspace, booktabs}
+\usepackage[T1]{fontenc}
+\usepackage[font=small, labelfont=bf]{caption}
+\usepackage{fourier}
+\usepackage[protrusion=true, expansion=true]{microtype}
+\usepackage[english]{babel}
+\usepackage{sectsty}
+\usepackage{url, lipsum}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{spverbatim}
+\usepackage{hyperref}
+
+
+\renewcommand{\thesection}{\arabic{section}}
+\setcounter{section}{0} %numeracija sekcija
+
+\graphicspath{ {./images/} }
+\setlength\parindent{0pt} %nemoj uvuci paragraph
+\newcommand{\code}[1]{\texttt{#1}} % code u tekstu
+
+%color
+\definecolor{my_green}{rgb}{0.027, 0.663, 0.545}
+\newcommand{\mygreen}[1]{{\color{my_green}#1}}
+\definecolor{my_red}{rgb}{0.843, 0.000, 0.384}
+\newcommand{\myred}[1]{{\color{my_red}#1}}
+
+
+%---- CODE LISTING
+\definecolor{codecomment}{rgb}{0.561, 0.561, 0.561}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{pozadina}{rgb}{0.925, 0.925, 0.925,}
+
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{pozadina},   
+    commentstyle=\color{codecomment},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+	basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=3pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+\lstset{style=mystyle}
+%--------
+
+
+
+\begin{document}
+
+\newcommand{\HRule}[1]{\rule{\linewidth}{#1}}
+\onehalfspacing
+
+
+%-------------------------------------------------------------------------------
+% HEADER & FOOTER
+%-------------------------------------------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\setlength\headheight{15pt}
+\fancyhead[L]{CANAL PLUS}
+
+
+%-------------------------------------------------------------------------------
+% FIRST PAGE
+%-------------------------------------------------------------------------------
+\title{ \normalsize \textsc{CANAL PLUS}
+\\ [1.0cm]
+\HRule{0.5pt} \\
+\LARGE \textbf{\uppercase{DOCKER LOCAL REGISTRY}}
+\HRule{2pt} \\ [0.5cm]
+\normalsize  \vspace*{5\baselineskip}
+\includegraphics[scale=0.8]{logo_rtrk.png}
+}
+
+
+
+\author{Miroslav Blazic}
+\date{\today\\
+	\fbox {Version: v1.1}
+}
+
+\maketitle
+
+
+
+%-------------------------------------------------------------------------------
+% TABLE OF CONTENT
+%-------------------------------------------------------------------------------
+\newpage
+\tableofcontents
+\newpage
+
+
+
+
+\section*{ABSTRACT}
+In this document we will learn about hosing our own docker registry. We will host docker registry and docker registry UI using docker compose.
+Then we will push image to that docker registry and we will pull image from docker registry.
+\newpage
+
+
+\section{INTRODUCION}
+
+\begin{center}
+	\includegraphics[scale=0.25]{introduction1.png}
+\end{center}
+
+
+
+Docker Hub is public cloud base Docker Regstry where people can pull and push own images. Using Docker Hub you can pull image which is someone pushed.
+Although it is Docker Hub public registry, we have opportunity to make own Docker image on some PC and that pull and push that images on that PC.
+\newline
+Because of the better illustrative understandig see the picture above.
+\newline
+Node1 is PC Docker Client will be pull docker images from any Docker Registry. Docker Registry can be public Docker Hub Regstry or Node2 (own Docker Registry)
+\newline
+
+
+\mygreen{Node1} (the PC we use for our work) should have \mygreen{docker} installed. Node1 is Docker Client.
+\myred{Node2} (the PC we use for own docker registry) should have \myred{docker}  and \myred{docker-compose} installed. Node2 is Docker Server.
+
+
+
+\section{DOCKER INSTALLATION}
+One PC is intended for Docker Client (\mygreen{Node1}), second PC is intended for Docker Server (\myred{Node2}). You can install on one PC server and client but in this case that PC it would be at the same time server and client for Docker Registry. But it still does not stop that any other PC (example: PC of your colleague) can be push and pull docker image on your PC. In this case your PC would be Docker Server and PC of your colleague would be Docker Client.
+
+
+\subsection{INSTALL DOCKER CLIENT}
+Be sure you are positioned on PC Docker Client (\mygreen{Node1}).\\
+Check if it is Docker installed, type in the terminal:
+\begin{lstlisting}[language=C]
+docker
+\end{lstlisting}
+If not installed, install the Docker with the following command.
+\begin{lstlisting}[language=C, caption= Install docker engine on Node1.]
+sudo apt-get install docker.io
+\end{lstlisting}
+
+
+
+\subsection{INSTALL DOCKER SERVER}
+Be sure you are positioned on PC Docker Server (\myred{Node2}).\\
+Check if it is Docker installed, type in the terminal:
+\begin{lstlisting}[language=C]
+docker
+\end{lstlisting}
+If not installed, install the Docker with the following command:
+\begin{lstlisting}[language=C, caption= Install docker engine on Node2.]
+sudo apt-get install docker.io
+\end{lstlisting}
+Now we need install Docker Compose. \\
+If not installed, install the Docker with the following command:
+\begin{lstlisting}[language=C, caption= Install Docker Compose on Node2.]
+sudo apt-get install docker-compose
+\end{lstlisting}
+
+
+
+\subsection{CALL DOCKER WITHOUT SUDO}
+Every time when call the \code{docker} command in terminal, as prefix neeed to be \code{sudo}.
+If you dont want every time call sudo user, following the next commands:
+\begin{lstlisting}[language=C, caption= Make call docker without sudo user.]
+	sudo groupadd docker
+	sudo usermod -aG docker ${USER}
+	reboot
+\end{lstlisting}
+
+
+
+\section{OWN REGISTRY}
+
+\subsection{SETUP DOCKER OWN REGISTRY}
+After successful instalations Docker Server, you need to be positioned on PC Docker Server (\myred{Node2}).
+Create directiorium \code{local-registry} and \code{docker-compose.yml} file in this directorium:
+\begin{lstlisting}[language=C, caption= Create dir local-registry and docker-compose.yml.]
+	mkdir -p ~/local-registry
+	cd ~/local-registry
+	touch docker-compose.yml
+	gedit docker-compose.yml
+\end{lstlisting}
+
+Put the following components in the above file \code {docker-compose.yml} and save it.
+\begin{lstlisting}[language=C, caption= Content in docker-compose.yml.]
+version: "3"
+services:
+  docker-registry:
+    image: registry:2
+    container_name: docker-registry
+    ports:
+    - 5000:5000
+    restart: always
+    volumes:
+    - ./docker-registry:/var/lib/registry
+\end{lstlisting}
+
+Now, you can start the service in foreground mode using below command. After that will be created image \code{registry} and start container \code{docker-container}.
+\begin{lstlisting}[language=C, caption= Start docker-compose.]
+	docker-compose -f docker-compose.yml up -d
+\end{lstlisting}
+
+Should be show result as:
+\begin{lstlisting}[language=C, caption= Result after docker-compose.]
+	Creating docker-registry ... done
+\end{lstlisting}
+
+Should be that imported image \code{regisry} and created and started container \code{docker-registry}, check it out:
+\begin{lstlisting}[language=C, caption= List of all images.]
+	docker images
+\end{lstlisting}
+\begin{lstlisting}[language=C, caption= List of all containers.]
+	docker ps -a
+\end{lstlisting}
+
+
+
+\subsection{PUSH IMAGE TO OWN REGISTRY}
+After successfuly setup own Registry on Docker Server, you should be push your image on your local registry from \myred{Node2} . For our needs we use image \code{ali{\_}linux{\_}sdk}. Firstly, we need download and import our image.
+\newline
+\newline
+Download file ali linux sdk.tar.gz from:\\ \url{smb://samba03/proot/iwedia/Projects/113. Canal+/ALi/}. \\
+If you windows user path in My Computer is: \\ \url{file://///samba03/proot/iwedia/Projects/113.%20Canal+/ALi/}
+\newline
+\newline
+
+Go to directorium  with \code{ali{\_}linux{\_}sdk.tar.gz} and type:
+\begin{lstlisting}[language=C, caption= Import image \code{ali{\_}linux{\_}sdk} .]
+	docker load < ali_linux_sdk.tar.gz
+	docker images
+\end{lstlisting}
+
+You must retag image \code{ali{\_}linux{\_}sdk}, but before that see what is ip address from \myred{Node2}:
+\begin{lstlisting}[language=C, caption= Retag image.]
+	ifconfig 
+	docker tag ali_linux_sdk LOCAL_IP_NODE_2:5000/ali_linux_sdk:latest
+	docker images
+	
+	// Example:
+	// docker tag ali_linux_sdk 192.168.0.2:5000/ali_linux_sdk:latest
+\end{lstlisting}
+
+Push image \code{ali{\_}linux{\_}sdk} on your own docker registry \myred{Node2}:
+\begin{lstlisting}[language=C, caption= Push image on your own registry.]
+	docker push LOCAL_IP_NODE_2:5000/ali_linux_sdk:latest
+
+	// Example:
+	// docker push 192.168.0.2:5000/ali_linux_sdk:latest
+\end{lstlisting}
+
+If show the error during the pushing then you must create file \code{daemon.json} if alredy not exists.
+\begin{lstlisting}
+	sudo touch /etc/docker/daemon.json
+	sudo gedit /etc/docker/daemon.json
+\end{lstlisting}
+
+In \code{daemon.json} add the following content:
+\begin{lstlisting}
+	{
+		"insecure-registries" : ["LOCAL_IP_NODE_2:5000"]
+	}
+\end{lstlisting}
+
+\begin{lstlisting}
+	sudo systemctl restart docker
+	sudo service docker restart
+\end{lstlisting}
+
+Try again push.
+
+
+
+\subsection{PULL IMAGE FROM OWN REGISTRY}
+
+Be sure that you positioned on Docker Clinet (\mygreen{Node1}) and see what is your ip address from that PC:
+\begin{lstlisting}
+ifconfig
+\end{lstlisting}
+
+You must create file \code{daemon.json} if alredy not exists.
+\begin{lstlisting}
+sudo touch /etc/docker/daemon.json
+sudo gedit /etc/docker/daemon.json
+\end{lstlisting}
+In file \code{daemon.json} on PC Docker Client (\mygreen{Node1}) add local ip address of Docker Server (\myred{Node2})
+\begin{lstlisting}[caption= In Node1 add address of Node2.]
+	{
+		"insecure-registries" : ["LOCAL_IP_NODE_2:5000"]
+	}
+\end{lstlisting}
+
+\begin{lstlisting}
+	sudo systemctl restart docker
+	sudo service docker restart
+\end{lstlisting}
+
+Pull image on PC Docker Client (\mygreen{Node1}) from PC Docker Server (\myred{Node2}):
+\begin{lstlisting}[caption= Pull from Docker Server]
+docker pull LOCAL_IP_NODE_2:5000/ali_linux_sdk:latest
+\end{lstlisting}
+
+
+\subsection{PULL/PUSH IMAGE FROM OWN REGISTRY VIA PUBLIC IP}
+In above text is described how to pull and push image from own docker registry (\myred{Node2}) using local ip adress.
+In below text will be descrbed how to pul and push image from own docker registry (\myred{Node2}) using public ip adress.
+\newline
+\newline
+Firstly, \textbf {must be forwarded port 5000} in router on PC Docker Server of that local ip address (\myred{Node2}).
+\newline
+\newline
+When port is forwarded we can continue.
+\newline
+
+The assumption is that you have already passed through section \textbf{SETUP DOCKER OWN REGISTRY}.
+\newline
+
+Check it what is your public ip of \myred{Node2}:
+\begin{lstlisting}[caption= Show public ip of Node2.]
+dig +short myip.opendns.com @resolver1.opendns.com
+\end{lstlisting}
+
+On PC Docker Server \myred{Node2} add in \code{daemon.json} public ip of this PC.
+\begin{lstlisting}
+sudo gedit /etc/docker/daemon.json
+\end{lstlisting}
+\begin{lstlisting}[language=C, caption= Add in Node2 public ip of Node2.]
+	{
+		"insecure-registries" : ["LOCAL_IP_NODE_2:5000", "PUBLIC_IP_NODE_2:5000"]
+	}
+	
+	// First ip is local address
+	// Second ip is public address
+\end{lstlisting}
+
+\begin{lstlisting}
+	sudo systemctl restart docker
+	sudo service docker restart
+\end{lstlisting}
+
+
+Switch to PC Docker Client (\mygreen{Node1}) and be sure that you have already image \code{ali{\_}linux{\_}sdk}.\\
+You must retag image \code{ali{\_}linux{\_}sdk} with public ip adress of \myred{Node2}.
+\begin{lstlisting}[caption= Retag image with public ip.]
+	docker tag ali_linux_sdk PUBLIC_IP_NODE_2:5000/ali_linux_sdk:latest
+	docker images
+\end{lstlisting}
+
+On PC Docker Client (\mygreen{Node1}) add in \code{daemon.json} public ip of \myred{Node2}:
+\begin{lstlisting}
+sudo gedit /etc/docker/daemon.json
+\end{lstlisting}
+\begin{lstlisting}[caption= Add in Node1 public ip of Node2.]
+	{
+		"insecure-registries" : ["LOCAL_IP_NODE_2:5000", "PUBLIC_IP_NODE_2:5000"]
+	}
+\end{lstlisting}
+
+\begin{lstlisting}
+	sudo systemctl restart docker
+	sudo service docker restart
+\end{lstlisting}
+
+Push the image \code{ali{\_}linux{\_}sdk} on  \mygreen{Node1} to \myred{Node2}:
+\begin{lstlisting}[language=C, caption= Push from Node1 to Node2 with public ip.]
+		docker push PUBLIC_IP_NODE_2:5000/ali_linux_sdk:latest
+
+	// Example:
+	// docker push 188.143.42.75:5000/ali_linux_sdk:latest
+\end{lstlisting}
+
+For the test, delete image which you pushed a little while ago:
+\begin{lstlisting}[caption= Delte image.]
+	docker rmi PUBLIC_IP_NODE_2:5000/ali_linux_sdk:latest
+\end{lstlisting}
+
+Now, you try to pull image:
+\begin{lstlisting}[caption= Pull image.]
+	docker pull PUBLIC_IP_NODE_2:5000/ali_linux_sdk:latest
+\end{lstlisting}
+
+
+
+\end{document}
