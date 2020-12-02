@@ -1,0 +1,177 @@
+
+\documentclass[12pt]{report}
+\usepackage[a4paper]{geometry}
+\usepackage[myheadings]{fullpage}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{graphicx, wrapfig, subcaption, setspace, booktabs}
+\usepackage[T1]{fontenc}
+\usepackage[font=small, labelfont=bf]{caption}
+\usepackage{fourier}
+\usepackage[protrusion=true, expansion=true]{microtype}
+\usepackage[english]{babel}
+\usepackage{sectsty}
+\usepackage{url, lipsum}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{spverbatim}
+\usepackage{hyperref}
+
+
+\renewcommand{\thesection}{\arabic{section}}
+\setcounter{section}{0} %numeracija sekcija
+
+\graphicspath{ {./images/} }
+\setlength\parindent{0pt} %nemoj uvuci paragraph
+\newcommand{\code}[1]{\texttt{#1}} % code u tekstu
+
+%color
+\newcommand{\blue}[1]{\textcolor{blue}{#1}}
+\newcommand{\green}[1]{\textcolor{green}{#1}}
+\newcommand{\red}[1]{\textcolor{red}{#1}}
+
+%---- CODE LISTING
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+\lstset{style=mystyle}
+%--------
+
+
+
+\begin{document}
+
+
+
+
+\newcommand{\HRule}[1]{\rule{\linewidth}{#1}}
+\onehalfspacing
+%\setcounter{tocdepth}{5}
+%\setcounter{secnumdepth}{5}
+
+%-------------------------------------------------------------------------------
+% HEADER & FOOTER
+%-------------------------------------------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\setlength\headheight{15pt}
+\fancyhead[L]{CANAL PLUS}
+
+
+%-------------------------------------------------------------------------------
+% FIRST PAGE
+%-------------------------------------------------------------------------------
+\title{ \normalsize \textsc{CANAL PLUS}
+		\\ [1.0cm]
+		\HRule{0.5pt} \\
+		\LARGE \textbf{\uppercase{MAKE BUILDROOT}}
+		\HRule{2pt} \\ [0.5cm]
+		\normalsize  \vspace*{5\baselineskip}}
+
+
+\author{Miroslav Blazic}
+\date{\today\\
+	\fbox {Version: v1.0}
+	}
+%\includegraphics[scale=0.3]{logo_rtrk.png}
+\maketitle
+
+
+
+%-------------------------------------------------------------------------------
+% TABLE OF CONTENT
+%-------------------------------------------------------------------------------
+\newpage
+\tableofcontents
+\newpage
+
+
+
+\section*{ABSTRACT}
+This document contains instruction of make buildroot based on Ubuntu 12.04. \newline
+The document is kept on the assumption that you already have corresponding linux OS. 
+
+\newpage
+
+
+
+\section{INSTRUCTIONS}
+We need download M3538.7z from link:
+\begin{lstlisting}[caption= Download M3538.7z]
+#Windows user
+smb://samba03/proot/iwedia/Projects/113. Canal+/ALi/ 
+
+#Linux user
+file:////samba03/proot/iwedia/Projects/113. Canal+/ALi/
+\end{lstlisting}
+
+Create directorium in which it will be located buildroot, then coppy and extract M3538.7z file in this directorium:
+\begin{lstlisting}[caption= Extract M3538.7z]
+mkdir ~/ALI_Linux_SDK
+mv <location/of/file/M3538.7z> ~/ALI_Linux_SDK
+cd ~/ALI_Linux_SDK
+7z x M3538.7z
+\end{lstlisting}
+
+After extract M3538.7z you should be coppy any files from dir M3538 to dir ALI Linux SDK:
+\begin{lstlisting}[caption= Copy files to ALI Linux SDK]
+cp ~/M3538/iwedia/linux_sdk/8.2.0.39/buildroot-8.2.0.39.tar.bz2 ~/ALI_Linux_SDK
+cp ~/M3538/iwedia/linux_sdk/8.2.0.39/pangea.sh ~/ALI_Linux_SDK
+cp ~/M3538/iwedia/linux_sdk/8.2.0.39/apply-patches.sh ~/ALI_Linux_SDK
+cp -r ~/M3538/iwedia/linux_sdk/8.2.0.39/patches ~/ALI_Linux_SDK
+\end{lstlisting}
+Now should be extract buildroot-8.2.0.39.tar.bz2:
+\begin{lstlisting}[caption= Extract buildroot-8.2.0.39.tar.bz2]
+cd ~/ALI_Linux_SDK
+tar -xvf buildroot-8.2.0.39.tar.bz2
+\end{lstlisting}
+
+After extract buildroot.X.tar.bz2 will be created dir /buildroot-8.2.0.39/release, now we should be coppy all alisee files on this dir.
+\begin{lstlisting}[caption= Coppy alisee files]
+cp ~/M3538/iwedia/linux_sdk/8.2.0.39/alisee-C* ~/ALI_Linux_SDK/buildroot-8.2.0.39/release/
+\end{lstlisting}
+
+Now we must apply change owner and permission in recrusive mode on dir ALI Linux SDK:
+\begin{lstlisting}[caption= change permission]
+cd ~/ALI_Linux_SDK
+sudo chown nobody:nogroup * -R
+sudo chmod 777 -R *
+\end{lstlisting}
+
+Run shell script pangea.sh which will be install required patches:
+\begin{lstlisting}[caption= pangea.sh ]
+./pangea.sh
+\end{lstlisting}
+
+Run build process:
+\begin{lstlisting}[caption= make ]
+make clean
+make alim3538_ddk_c0200_nand_defconfig
+make all
+\end{lstlisting}
+
+
+
+
+
+\end{document}
